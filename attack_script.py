@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 import argparse
+import subprocess
 from PIL import Image, ImageEnhance
 from stegano import lsb
 
@@ -135,26 +136,71 @@ class Attack:
         equalized = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
         self.save_image(equalized, "histogram_equalization")
 
+def generate_stego_image(image_path, secret_data_path, output_folder, tools=None):
+    if tools is None:
+        tools = ['steghide', 'stegano']
+
+    stego_images = []
+    for tool in tools:
+        stego_image_path = os.path.join(output_folder, f"stego_{tool}.png")
+        if tool == 'steghide':
+            command = [
+                'steghide', 'embed',
+                '-cf', image_path,
+                '-ef', secret_data_path,
+                '-sf', stego_image_path,
+            ]
+        elif tool == 'stegano':
+            secret = lsb.hide(image_path, open(secret_data_path).read())
+            secret.save(stego_image_path)
+            command = None
+        else:
+            print(f"Unsupported steganography tool: {tool}")
+            continue
+
+        if command:
+            try:
+                subprocess.run(command, check=True)
+                print(f"Stego image generated successfully using {tool}.")
+            except subprocess.CalledProcessError as e:
+                print(f"An error occurred while generating the stego image with {tool}: {e}")
+                continue
+        stego_images.append(stego_image_path)
+    return stego_images
+
 
 # Main Function
 def main(image_path, output_folder):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    attack = Attack(image_path, output_folder)
-    print("Starting transformations...")
-    attack.embed_data()
-    attack.resize()
-    attack.compress()
-    attack.gaussian_blur()
-    attack.add_noise()
-    attack.adjust_brightness()
-    attack.overlay()
-    attack.crop()
-    attack.rotate()
-    attack.screenshot()
-    attack.histogram_equalization()
-    print("All transformations applied successfully!")
+    stego_images = generate_stego_image(args.image, args.secret_data, args.output, args.tools)
+    for stego_image in stego_images:
+        print(f"\nProcessing attacks for {stego_image}...")
+        attack = Attack(stego_image, args.output)
+        attack_methods = [
+            attack.embed_data,
+            attack.resize,
+            attack.compress,
+            attack.gaussian_blur,
+            attack.add_noise,
+            attack.adjust_brightness,
+            attack.overlay,
+            attack.crop,
+            attack.rotate,
+            attack.screenshot,
+            attack.histogram_equalization,
+        ]
+
+        for method in attack_methods:
+            method()
+
+        # Verify the embedded data if the --verify flag is set
+        if args.verify:
+            try:
+                attack.extract_data()
+            except ValueError as e:
+                print(f"Verification failed for {stego_image}: {e}")
 
 
 if __name__ == "__main__":
@@ -163,6 +209,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--image", required=True, help="Path to the input image")
     parser.add_argument("--output", required=True, help="Path to the output folder")
+    parser.add_argument("--secret_data", required=True, help="Path to the secret data to embed")
+    parser.add_argument("--tool", default='steghide', choices=['steghide', 'stegano'], help="Steganography tool to use")
     parser.add_argument(
         "--verify", help="Verify the embedded data", action="store_true"
     )
