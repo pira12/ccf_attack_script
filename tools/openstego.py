@@ -21,8 +21,13 @@ class Openstego(Tool):
         -sf, --stegofile <file>              Stego file
         """
 
-        print(f"openstego embed -cf {cover_file} -mf {data} -sf {stego_file}")
-        os.system(f"openstego embed -cf {cover_file} -mf {data} -sf {stego_file}")
+        # Duplicate the image in png format (jpg not supported)
+        tmp = cover_file[:-4] + "_tmp.png"
+        os.system(f"cp {cover_file} {tmp}")
+        # Replace unsupported file extension
+        stego_file = stego_file.replace(".jpg", ".png")
+        os.system(f"openstego embed -cf {tmp} -mf {data} -sf {stego_file} -E")
+        os.system(f"rm {tmp}")
 
     def extract_data(self, stego_file, output_file):
         """
@@ -33,6 +38,17 @@ class Openstego(Tool):
         :return: The extracted data.
         """
         # Implementation for extracting data
-        os.system(f"openstego extract -sf {stego_file} -xf {output_file}")
-        with open(f"{output_file}", "r") as f:
-            return f.read()
+        exit_code = os.system(f"openstego extract -sf {stego_file} -xf {output_file} -p 'Ikwilkaas1'")
+        # Read the command output
+        # print(f"Exit code: {exit_code}")
+        # if exit_code == 0:
+        #     with open(f"{output_file}", "w") as f:
+        #         f.write("-")
+        #     return None
+
+        try:
+            with open(f"{output_file}", "r") as f:
+                return f.read()
+        except FileNotFoundError:
+            with open(f"{output_file}", "w") as f:
+                f.write("-")
