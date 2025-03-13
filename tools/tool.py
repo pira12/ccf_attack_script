@@ -1,6 +1,9 @@
 class Tool:
 
-    def embed_data(self, data, cover_file, stego_file):
+    def __init__(self, name):
+        self.name = name
+
+    def embed_data(self, data, cover_file, stego_file) -> None:
         """
         Embeds data into a cover file to create a stego file.
 
@@ -11,7 +14,7 @@ class Tool:
         # Implementation for embedding data
         pass
 
-    def extract_data(self, stego_file):
+    def extract_data(self, stego_file) -> str:
         """
         Extracts embedded data from a stego file.
 

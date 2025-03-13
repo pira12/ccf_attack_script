@@ -171,3 +171,7 @@ cython_debug/
 .pypirc
 
 test_output
+
+files/*
+!files/cover_images
+!files/watermarks

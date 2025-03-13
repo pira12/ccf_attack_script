@@ -5,6 +5,7 @@ import argparse
 import subprocess
 from PIL import Image, ImageEnhance
 from stegano import lsb
+from tools.openstego import Openstego
 
 
 class Attack:
@@ -52,7 +53,7 @@ class Attack:
         self.save_image(resized, "resized")
 
     # JPEG Compression
-    def compress(self, n=5):
+    def compress(self, n=4):
         print("Applying compress...")
         qualities = np.linspace(0, 100, n, dtype=int)
         for quality in qualities:
@@ -136,87 +137,137 @@ class Attack:
         equalized = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
         self.save_image(equalized, "histogram_equalization")
 
-def generate_stego_image(image_path, secret_data_path, output_folder, tools=None):
+
+# def generate_stego_image(image_path, secret_data_path, output_folder, tools=None):
+#     if tools is None:
+#         tools = ["steghide", "stegano"]
+
+#     stego_images = []
+#     for tool in tools:
+#         stego_image_path = os.path.join(output_folder, f"stego_{tool}.png")
+#         if tool == "steghide":
+#             command = [
+#                 "steghide",
+#                 "embed",
+#                 "-cf",
+#                 image_path,
+#                 "-ef",
+#                 secret_data_path,
+#                 "-sf",
+#                 stego_image_path,
+#             ]
+#         elif tool == "stegano":
+#             secret = lsb.hide(image_path, open(secret_data_path).read())
+#             secret.save(stego_image_path)
+#             command = None
+#         else:
+#             print(f"Unsupported steganography tool: {tool}")
+#             continue
+
+#         if command:
+#             try:
+#                 subprocess.run(command, check=True)
+#                 print(f"Stego image generated successfully using {tool}.")
+#             except subprocess.CalledProcessError as e:
+#                 print(
+#                     f"An error occurred while generating the stego image with {tool}: {e}"
+#                 )
+#                 continue
+#         stego_images.append(stego_image_path)
+#     return stego_images
+
+
+def generate_stego_image(
+    secret_data_path="./files/watermarks/hash.txt",
+    output_folder="./files",
+    image_path="./files/cover_images",
+    tools=None,
+):
     if tools is None:
-        tools = ['steghide', 'stegano']
+        tools = [Openstego()]
 
-    stego_images = []
+    completed = []
     for tool in tools:
-        stego_image_path = os.path.join(output_folder, f"stego_{tool}.png")
-        if tool == 'steghide':
-            command = [
-                'steghide', 'embed',
-                '-cf', image_path,
-                '-ef', secret_data_path,
-                '-sf', stego_image_path,
-            ]
-        elif tool == 'stegano':
-            secret = lsb.hide(image_path, open(secret_data_path).read())
-            secret.save(stego_image_path)
-            command = None
-        else:
-            print(f"Unsupported steganography tool: {tool}")
-            continue
+        # open files/cover_images and iterate over them
+        stego_folder_path = os.path.join(output_folder, tool.name)
+        if not os.path.exists(os.path.join(output_folder, tool.name)):
+            os.makedirs(stego_folder_path)
+            os.makedirs(os.path.join(stego_folder_path, "attacks"))
+            os.makedirs(os.path.join(stego_folder_path, "extracted"))
 
-        if command:
-            try:
-                subprocess.run(command, check=True)
-                print(f"Stego image generated successfully using {tool}.")
-            except subprocess.CalledProcessError as e:
-                print(f"An error occurred while generating the stego image with {tool}: {e}")
-                continue
-        stego_images.append(stego_image_path)
-    return stego_images
+        for cover_image in os.listdir(image_path):
+            stego_image_path = os.path.join(stego_folder_path, f"{cover_image}")
+            tool.embed_data(secret_data_path, cover_image, stego_image_path)
+            print(
+                f"Successfully embedded data using {tool.name} in cover images: {completed}",
+                end="\r",
+            )
+        print()
 
 
 # Main Function
-def main(image_path, output_folder):
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+def main(image_path=None, output_folder=None, secret_data_path=None, tools=None):
+    # if not os.path.exists(output_folder):
+    #     os.makedirs(output_folder)
 
-    stego_images = generate_stego_image(args.image, args.secret_data, args.output, args.tools)
-    for stego_image in stego_images:
-        print(f"\nProcessing attacks for {stego_image}...")
-        attack = Attack(stego_image, args.output)
-        attack_methods = [
-            attack.embed_data,
-            attack.resize,
-            attack.compress,
-            attack.gaussian_blur,
-            attack.add_noise,
-            attack.adjust_brightness,
-            attack.overlay,
-            attack.crop,
-            attack.rotate,
-            attack.screenshot,
-            attack.histogram_equalization,
-        ]
+    stego_images = generate_stego_image(tools=tools)
 
-        for method in attack_methods:
-            method()
+    # for stego_image in stego_images:
+    #     print(f"\nProcessing attacks for {stego_image}...")
+    #     attack = Attack(stego_image, args.output)
+    #     attack_methods = [
+    #         attack.embed_data,
+    #         attack.resize,
+    #         attack.compress,
+    #         attack.gaussian_blur,
+    #         attack.add_noise,
+    #         attack.adjust_brightness,
+    #         attack.overlay,
+    #         attack.crop,
+    #         attack.rotate,
+    #         attack.screenshot,
+    #         attack.histogram_equalization,
+    #     ]
 
-        # Verify the embedded data if the --verify flag is set
-        if args.verify:
-            try:
-                attack.extract_data()
-            except ValueError as e:
-                print(f"Verification failed for {stego_image}: {e}")
+    #     for method in attack_methods:
+    #         method()
+
+    #     # Verify the embedded data if the --verify flag is set
+    #     if args.verify:
+    #         try:
+    #             attack.extract_data()
+    #         except ValueError as e:
+    #             print(f"Verification failed for {stego_image}: {e}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Apply multiple transformations to an image."
     )
-    parser.add_argument("--image", required=True, help="Path to the input image")
-    parser.add_argument("--output", required=True, help="Path to the output folder")
-    parser.add_argument("--secret_data", required=True, help="Path to the secret data to embed")
-    parser.add_argument("--tool", default='steghide', choices=['steghide', 'stegano'], help="Steganography tool to use")
+    parser.add_argument(
+        "--image",
+        default="./files/cover_images",
+        help="Path to the input image (folder)",
+    )
+    parser.add_argument("--output", default="./files", help="Path to the output folder")
+    parser.add_argument(
+        "--secret_data",
+        default="./files/watermarks",
+        help="Path to the secret data to embed",
+    )
+    parser.add_argument(
+        "--tool",
+        default="None",
+        choices=["steghide", "stegano", "openstego"],
+        help="Steganography tool to use",
+    )
     parser.add_argument(
         "--verify", help="Verify the embedded data", action="store_true"
     )
+
     args = parser.parse_args()
     if args.verify:
         attack = Attack(args.image, args.output)
         attack.extract_data()
     else:
-        main(args.image, args.output)
+        main()
