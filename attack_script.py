@@ -3,6 +3,7 @@ import numpy as np
 import os
 import argparse
 from PIL import Image, ImageEnhance
+from stegano import lsb
 
 
 class Attack:
@@ -22,10 +23,24 @@ class Attack:
         cv2.imwrite(filename, image)
         print(f"{method_name} applied and saved: {filename}")
 
+    def extract_data(self):
+        # Use LSB library to extract the hidden message
+        path = os.path.join(self.output_folder, f"embed_data_{self.image_name}.png")
+        secret = lsb.reveal(path)
+        if secret is None:
+            raise ValueError("No hidden message found!")
+        msg = secret
+        print(f"Extracted message: {msg}")
+
     # Embed additional data placeholder (doesn't alter image)
     def embed_data(self):
         print("Applying embed_data...")
-        self.save_image(self.image, "embed_data")
+
+        secret = lsb.hide(self.image_path, "hello World!")
+        secret.save(
+            os.path.join(self.output_folder, f"embed_data_{self.image_name}.png")
+        )
+        print("Data embedded and saved.")
 
     # Resize Image towards the middle
     def resize(self):
@@ -148,5 +163,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("--image", required=True, help="Path to the input image")
     parser.add_argument("--output", required=True, help="Path to the output folder")
+    parser.add_argument(
+        "--verify", help="Verify the embedded data", action="store_true"
+    )
     args = parser.parse_args()
-    main(args.image, args.output)
+    if args.verify:
+        attack = Attack(args.image, args.output)
+        attack.extract_data()
+    else:
+        main(args.image, args.output)
