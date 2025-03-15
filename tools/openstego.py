@@ -47,8 +47,8 @@ class Openstego(Tool):
         #     return None
 
         try:
-            with open(f"{output_file}", "r") as f:
+            with open(f"{output_file}", "rb") as f:
                 return f.read()
         except FileNotFoundError:
-            with open(f"{output_file}", "w") as f:
+            with open(f"{output_file}", "wb") as f:
                 f.write("-")
