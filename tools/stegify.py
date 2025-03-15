@@ -17,7 +17,7 @@ class Stegify(Tool):
         """
         # Run the Stegify encode command
         subprocess.run([
-            "tools/stegify_linux_x86-64", "encode",
+            "tools/bin/stegify_linux_x86-64", "encode",
             "--carrier", cover_file,
             "--data", data,
             "--result", stego_file
@@ -33,7 +33,7 @@ class Stegify(Tool):
         """
         # Run the Stegify decode command
         subprocess.run([
-            "tools/stegify_linux_x86-64", "decode",
+            "tools/bin/stegify_linux_x86-64", "decode",
             "--carrier", stego_file,
             "--result", output_file
         ], check=True)

@@ -7,6 +7,7 @@ from PIL import Image, ImageEnhance
 from stegano import lsb
 from tools.openstego import Openstego
 from tools.stegify import Stegify
+from tools.stegosuite import Stegosuite
 
 
 class Attack:
@@ -146,7 +147,7 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify()]
+        tools = [Openstego(), Stegify(), Stegosuite()]
 
     for tool in tools:
         completed = []
@@ -217,7 +218,7 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify()]
+        tools = [Openstego(), Stegify(), Stegosuite()]
 
     for tool in tools:
         completed = []
@@ -262,7 +263,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tool",
         default="None",
-        choices=["steghide", "stegano", "openstego", "stegify"],
+        choices=["steghide", "stegano", "openstego", "stegify", "stegosuite"],
         help="Steganography tool to use",
     )
     parser.add_argument(
