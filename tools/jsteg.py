@@ -17,7 +17,7 @@ class Jsteg(Tool):
         :param stego_file: The output file with embedded data.
         """
         command = [
-            "tools/bin/jsteg-darwin-arm64", "hide" , cover_file, data, stego_file
+            "tools/bin/jsteg-linux-amd64", "hide" , cover_file, data, stego_file
         ]
 
         subprocess.run(command, check=True)
@@ -32,7 +32,7 @@ class Jsteg(Tool):
         :return: The extracted data.
         """
         command = [
-            "tools/bin/jsteg-darwin-arm64", "reveal", stego_file
+            "tools/bin/jsteg-linux-amd64", "reveal", stego_file
         ]
 
         out=open(output_file, 'wb')
