@@ -1,7 +1,8 @@
 class Tool:
 
-    def __init__(self, name):
+    def __init__(self, name, extension="png"):
         self.name = name
+        self.extension = extension
 
     def embed_data(self, data, cover_file, stego_file) -> None:
         """

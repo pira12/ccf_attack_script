@@ -161,6 +161,9 @@ def generate_stego_image(
         for cover_image in os.listdir(image_path):
             stego_image_path = os.path.join(stego_folder_path, f"{cover_image}")
             cover_image = os.path.join(image_path, cover_image)
+            # Ignore incompatible extensions
+            if tool.extension != cover_image.split('.')[-1]:
+                continue
             tool.embed_data(secret_data_path, cover_image, stego_image_path)
             completed.append(cover_image)
             print(
