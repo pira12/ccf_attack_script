@@ -5,11 +5,13 @@ import argparse
 import subprocess
 from PIL import Image, ImageEnhance
 from stegano import lsb
+
+from tools.jsteg import Jsteg
 from tools.openstego import Openstego
 from tools.stegify import Stegify
 from tools.stegosuite import Stegosuite
 from tools.rivagan import Rivagan
-
+from tools.steganotool import Steganotool
 class Attack:
     def __init__(self, image_path, output_folder):
         self.image_path = image_path
@@ -147,7 +149,7 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool()]
 
     for tool in tools:
         completed = []
@@ -221,7 +223,7 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool()]
 
     for tool in tools:
         completed = []
