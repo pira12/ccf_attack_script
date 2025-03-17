@@ -226,19 +226,43 @@ def extract_data(
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
 
-    for tool in tools:
-        completed = []
-        stego_folder_path = os.path.join(output_folder, tool.name)
-        for stego_image in os.listdir(os.path.join(stego_folder_path, "attacks")):
-            stego_image_path = os.path.join(stego_folder_path, "attacks", stego_image)
-            # remove file extension
-            name = os.path.splitext(stego_image)[0]
-            output_file = os.path.join(stego_folder_path, "extracted", name + ".txt")
-            data = tool.extract_data(stego_image_path, output_file)
-            completed.append(stego_image)
-            print(
-                f"Extracted data from {stego_image}"
-            )
+    summary_file_path = os.path.join(output_folder, "extraction_summary.txt")
+
+    with open(summary_file_path, 'w') as summary_file:
+        for tool in tools:
+            completed = []
+            failed = []
+            stego_folder_path = os.path.join(output_folder, tool.name)
+
+            summary_file.write(f"Extraction Summary for {tool.name}\n")
+            summary_file.write("=" * 40 + "\n")
+
+            for stego_image in os.listdir(os.path.join(stego_folder_path, "attacks")):
+                stego_image_path = os.path.join(stego_folder_path, "attacks", stego_image)
+                # remove file extension
+                name = os.path.splitext(stego_image)[0]
+                output_file = os.path.join(stego_folder_path, "extracted", name + ".txt")
+
+                try:
+                    data = tool.extract_data(stego_image_path, output_file)
+                    completed.append(stego_image)
+                    summary_file.write(f"Successfully extracted data from {stego_image}\n")
+                    print(f"Extracted data from {stego_image}")
+                except Exception as e:
+                    failed.append(stego_image)
+                    summary_file.write(f"Failed to extract data from {stego_image}: {e}\n")
+                    print(f"Failed to extract data from {stego_image}: {e}")
+
+            summary_file.write("\nSummary:\n")
+            summary_file.write(f"Successfully extracted from {len(completed)} images:\n")
+            for img in completed:
+                summary_file.write(f"  - {img}\n")
+
+            summary_file.write(f"\nFailed to extract from {len(failed)} images:\n")
+            for img in failed:
+                summary_file.write(f"  - {img}\n")
+
+            summary_file.write("\n" + "=" * 40 + "\n")
 
 
 # Main Function
