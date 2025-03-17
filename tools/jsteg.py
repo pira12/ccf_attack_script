@@ -1,9 +1,7 @@
 from PIL.ImageOps import cover
 
 from .tool import Tool
-import os
 import subprocess
-import shutil  # Import shutil to move files
 
 class Jsteg(Tool):
 
@@ -37,19 +35,13 @@ class Jsteg(Tool):
             "tools/bin/jsteg-darwin-arm64", "reveal", stego_file
         ]
 
-        try:
-            # Run the extraction command and capture errors
-            subprocess.run(command, check=True)
-            print("Extraction successful.")
+        out=open(output_file, 'wb')
 
-            # Read extracted data
-            if os.path.exists(output_file):
-                with open(output_file, "rb") as f:
-                    return f.read()
-            else:
-                print("Error: Output file was not created.")
-                return None
-        except subprocess.CalledProcessError as e:
-            print(f"Error: Extraction failed with code {e.returncode}. Wrong key?")
-            print(f"Command output: {e.output}")
-            return None
+        try:
+            # Run the extraction command and capture the output
+            result = subprocess.run(command, check=True, stdout=out, stderr=out)
+        except Exception as e:
+            print(e)
+        out.close()
+
+
