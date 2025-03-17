@@ -226,6 +226,10 @@ def extract_data(
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
 
+    # Read the secret data from the hash file
+    with open(secret_data_path, 'r') as hash_file:
+        secret_data = hash_file.read().strip()
+
     summary_file_path = os.path.join(output_folder, "extraction_summary.txt")
 
     with open(summary_file_path, 'w') as summary_file:
@@ -245,9 +249,18 @@ def extract_data(
 
                 try:
                     data = tool.extract_data(stego_image_path, output_file)
-                    completed.append(stego_image)
-                    summary_file.write(f"Successfully extracted data from {stego_image}\n")
-                    print(f"Extracted data from {stego_image}")
+                    # Read the extracted data from the output file
+                    with open(output_file, 'r') as extracted_file:
+                        extracted_data = extracted_file.read().strip()
+
+                    if extracted_data == secret_data:
+                        completed.append(stego_image)
+                        summary_file.write(f"Successfully extracted data from {stego_image}\n")
+                        print(f"Extracted data from {stego_image}")
+                    else:
+                        failed.append(stego_image)
+                        summary_file.write(f"Extracted data from {stego_image} does not match the secret data\n")
+                        print(f"Extracted data from {stego_image} does not match the secret data")
                 except Exception as e:
                     failed.append(stego_image)
                     summary_file.write(f"Failed to extract data from {stego_image}: {e}\n")
