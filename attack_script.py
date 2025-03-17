@@ -13,7 +13,7 @@ from tools.rivagan import Rivagan
 class Attack:
     def __init__(self, image_path, output_folder):
         self.image_path = image_path
-        self.image_name = os.path.splitext(os.path.basename(image_path))[0]
+        self.image_name, self.extension = os.path.splitext(os.path.basename(image_path))
         self.output_folder = output_folder
         self.image = cv2.imread(image_path)
         if self.image is None:
@@ -22,14 +22,14 @@ class Attack:
     # Function to save image with method name
     def save_image(self, image, method_name):
         filename = os.path.join(
-            self.output_folder, f"{method_name}_{self.image_name}.png"
+            self.output_folder, f"{method_name}_{self.image_name}.{self.extension}"
         )
         cv2.imwrite(filename, image)
         print(f"{method_name} applied and saved: {filename}")
 
     def extract_data(self):
         # Use LSB library to extract the hidden message
-        path = os.path.join(self.output_folder, f"embed_data_{self.image_name}.png")
+        path = os.path.join(self.output_folder, f"embed_data_{self.image_name}.{self.extension}")
         secret = lsb.reveal(path)
         if secret is None:
             raise ValueError("No hidden message found!")
@@ -42,7 +42,7 @@ class Attack:
 
         secret = lsb.hide(self.image_path, "hello World!")
         secret.save(
-            os.path.join(self.output_folder, f"embed_data_{self.image_name}.png")
+            os.path.join(self.output_folder, f"embed_data_{self.image_name}.{self.extension}")
         )
         print("Data embedded and saved.")
 
@@ -61,7 +61,7 @@ class Attack:
         qualities = np.linspace(0, 100, n, dtype=int)
         for quality in qualities:
             filename = os.path.join(
-                self.output_folder, f"compressed_{quality}_{self.image_name}.png"
+                self.output_folder, f"compressed_{quality}_{self.image_name}.{self.extension}"
             )
             cv2.imwrite(filename, self.image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
             print(f"compress applied and saved: {filename} with quality {quality}")
