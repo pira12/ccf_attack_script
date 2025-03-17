@@ -8,7 +8,7 @@ import shutil  # Import shutil to move files
 class Jsteg(Tool):
 
     def __init__(self):
-        super().__init__("jsteg")
+        super().__init__("jsteg", "jpg")
 
     def embed_data(self, data, cover_file, stego_file):
         """
