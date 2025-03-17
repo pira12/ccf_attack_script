@@ -11,6 +11,7 @@ from tools.openstego import Openstego
 from tools.stegify import Stegify
 from tools.stegosuite import Stegosuite
 from tools.rivagan import Rivagan
+from tools.steghide import Steghide
 from tools.steganotool import Steganotool
 class Attack:
     def __init__(self, image_path, output_folder):
@@ -149,7 +150,7 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
 
     for tool in tools:
         completed = []
@@ -223,7 +224,7 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
 
     for tool in tools:
         completed = []
