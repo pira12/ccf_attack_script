@@ -8,7 +8,7 @@ class Stegosuite(Tool):
     def __init__(self):
         super().__init__("stegosuite")
 
-    def embed_data(self, data, cover_file, stego_file, key="BSC", keyfile=None):
+    def embed_data(self, data, cover_file, stego_file, key="BSC"):
         """
         Embeds data into a cover file to create a stego file.
 
@@ -16,25 +16,30 @@ class Stegosuite(Tool):
         :param cover_file: The file to embed data into.
         :param stego_file: The output file with embedded data.
         :param key: The secret key used for encryption and hiding.
-        :param keyfile: Path to a file which contains the secret key.
         """
         command = [
             "tools/bin/stegosuite", "embed",
+            "-k", key,
             f"-f={data}",
+            f"-o={stego_file}",
             cover_file
         ]
 
-        if key:
-            command.extend(["-k", key])
-        elif keyfile:
-            command.extend(["--keyfile", keyfile])
+        print(f"Running command: {' '.join(command)}")  # Debug: Print the command
 
-        subprocess.run(command, check=True)
+        try:
+            subprocess.run(command, check=True)
+            print("Embedding command executed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error: Embedding failed with code {e.returncode}.")
+            return
 
         # Detect the incorrectly placed file
         stego_dir = os.path.dirname(cover_file)  # Get the directory of the cover image
         stego_filename = os.path.basename(cover_file).split('.')[0] + "_embed.jpg"
         auto_stego_file = os.path.join(stego_dir, stego_filename)
+
+        print(f"Checking for auto-generated stego file at: {auto_stego_file}")  # Debug
 
         # Move the file to the correct location
         if os.path.exists(auto_stego_file):
@@ -49,27 +54,18 @@ class Stegosuite(Tool):
             print("Error: Stego file was not created as expected.")
 
 
-    def extract_data(self, stego_file, output_file, key="BSC", keyfile=None):
-        """
-        Extracts embedded data from a stego file.
-
-        :param stego_file: The file to extract data from.
-        :param output_file: The output file to save the extracted data.
-        :param key: The secret key used for encryption and hiding.
-        :param keyfile: Path to a file which contains the secret key.
-        :return: The extracted data.
-        """
-        command = ["tools/bin/stegosuite", "extract", stego_file]
-
-        if key:
-            command.extend(["-k", key])
-        elif keyfile:
-            command.extend(["--keyfile", keyfile])
+    def extract_data(self, stego_file, output_file, key="BSC"):
+        extract_command = ["tools/bin/stegosuite", "extract", stego_file, "-k", key]
 
         try:
-            # Run the extraction command and capture errors
-            subprocess.run(command, check=True)
-            print("Extraction successful.")
+            # Run the extraction command
+            subprocess.run(extract_command, check=True)
+            print("Extraction command executed successfully.")
+
+            # Move the extracted file to the output location
+            move_command = ["mv", "files/stegosuite/attacks/hash.txt", output_file]
+            subprocess.run(move_command, check=True)
+            print("File moved successfully.")
 
             # Read extracted data
             if os.path.exists(output_file):
@@ -81,4 +77,7 @@ class Stegosuite(Tool):
         except subprocess.CalledProcessError as e:
             print(f"Error: Extraction failed with code {e.returncode}. Wrong key?")
             print(f"Command output: {e.output}")
+            return None
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
             return None
