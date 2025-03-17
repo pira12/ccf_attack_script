@@ -61,7 +61,7 @@ class Attack:
         qualities = np.linspace(0, 100, n, dtype=int)
         for quality in qualities:
             filename = os.path.join(
-                self.output_folder, f"compressed_{quality}_{self.image_name}.jpg"
+                self.output_folder, f"compressed_{quality}_{self.image_name}.png"
             )
             cv2.imwrite(filename, self.image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
             print(f"compress applied and saved: {filename} with quality {quality}")
