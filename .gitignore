@@ -176,3 +176,5 @@ test_output
 files/*
 !files/cover_images
 !files/watermarks
+
+.env
