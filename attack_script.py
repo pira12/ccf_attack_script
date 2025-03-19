@@ -13,6 +13,7 @@ from tools.stegosuite import Stegosuite
 from tools.rivagan import Rivagan
 from tools.steghide import Steghide
 from tools.steganotool import Steganotool
+from tools.outguess import Outguess
 class Attack:
     def __init__(self, image_path, output_folder):
         self.image_path = image_path
@@ -150,7 +151,7 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
 
     for tool in tools:
         completed = []
@@ -224,7 +225,7 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
 
     # Read the secret data from the hash file
     with open(secret_data_path, 'r') as hash_file:
