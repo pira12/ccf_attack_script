@@ -53,9 +53,9 @@ class Attack:
     def resize(self):
         print("Applying resize...")
         resized = self.image
-        # resized = cv2.resize(
-        #     self.image, (self.image.shape[1] // 2, self.image.shape[0] // 2)
-        # )
+        resized = cv2.resize(
+            self.image, (self.image.shape[1] // 2, self.image.shape[0] // 2)
+        )
         self.save_image(resized, "resized")
 
     # JPEG Compression
