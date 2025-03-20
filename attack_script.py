@@ -13,6 +13,7 @@ from tools.stegosuite import Stegosuite
 from tools.rivagan import Rivagan
 from tools.steghide import Steghide
 from tools.steganotool import Steganotool
+from tools.outguess import Outguess
 class Attack:
     def __init__(self, image_path, output_folder):
         self.image_path = image_path
@@ -150,7 +151,7 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
 
     for tool in tools:
         completed = []
@@ -224,21 +225,58 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
 
-    for tool in tools:
-        completed = []
-        stego_folder_path = os.path.join(output_folder, tool.name)
-        for stego_image in os.listdir(os.path.join(stego_folder_path, "attacks")):
-            stego_image_path = os.path.join(stego_folder_path, "attacks", stego_image)
-            # remove file extension
-            name = os.path.splitext(stego_image)[0]
-            output_file = os.path.join(stego_folder_path, "extracted", name + ".txt")
-            data = tool.extract_data(stego_image_path, output_file)
-            completed.append(stego_image)
-            print(
-                f"Extracted data from {stego_image}"
-            )
+    # Read the secret data from the hash file
+    with open(secret_data_path, 'r') as hash_file:
+        secret_data = hash_file.read().strip()
+
+    summary_file_path = os.path.join(output_folder, "extraction_summary.txt")
+
+    with open(summary_file_path, 'w') as summary_file:
+        for tool in tools:
+            completed = []
+            failed = []
+            stego_folder_path = os.path.join(output_folder, tool.name)
+
+            summary_file.write(f"Extraction Summary for {tool.name}\n")
+            summary_file.write("=" * 40 + "\n")
+
+            for stego_image in os.listdir(os.path.join(stego_folder_path, "attacks")):
+                stego_image_path = os.path.join(stego_folder_path, "attacks", stego_image)
+                # remove file extension
+                name = os.path.splitext(stego_image)[0]
+                output_file = os.path.join(stego_folder_path, "extracted", name + ".txt")
+
+                try:
+                    data = tool.extract_data(stego_image_path, output_file)
+                    # Read the extracted data from the output file
+                    with open(output_file, 'r') as extracted_file:
+                        extracted_data = extracted_file.read().strip()
+
+                    if extracted_data == secret_data:
+                        completed.append(stego_image)
+                        summary_file.write(f"Successfully extracted data from {stego_image}\n")
+                        print(f"Extracted data from {stego_image}")
+                    else:
+                        failed.append(stego_image)
+                        summary_file.write(f"Extracted data from {stego_image} does not match the secret data\n")
+                        print(f"Extracted data from {stego_image} does not match the secret data")
+                except Exception as e:
+                    failed.append(stego_image)
+                    summary_file.write(f"Failed to extract data from {stego_image}: {e}\n")
+                    print(f"Failed to extract data from {stego_image}: {e}")
+
+            summary_file.write("\nSummary:\n")
+            summary_file.write(f"Successfully extracted from {len(completed)} images:\n")
+            for img in completed:
+                summary_file.write(f"  - {img}\n")
+
+            summary_file.write(f"\nFailed to extract from {len(failed)} images:\n")
+            for img in failed:
+                summary_file.write(f"  - {img}\n")
+
+            summary_file.write("\n" + "=" * 40 + "\n")
 
 
 # Main Function
