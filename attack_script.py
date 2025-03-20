@@ -13,12 +13,14 @@ from tools.stegosuite import Stegosuite
 from tools.steghide import Steghide
 from tools.steganotool import Steganotool
 from tools.outguess import Outguess
+
 class Attack:
     def __init__(self, image_path, output_folder):
         self.image_path = image_path
         self.image_name, self.extension = os.path.splitext(os.path.basename(image_path))
         self.output_folder = output_folder
-        self.image = cv2.imread(image_path)
+        self.image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        self.imge = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         if self.image is None:
             raise ValueError(f"Image {image_path} not found!")
 
@@ -27,7 +29,10 @@ class Attack:
         filename = os.path.join(
             self.output_folder, f"{method_name}_{self.image_name}{self.extension}"
         )
-        cv2.imwrite(filename, image)
+        if self.extension == ".png":
+            cv2.imwrite(filename, image, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+        else:
+            cv2.imwrite(filename, image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
         print(f"{method_name} applied and saved: {filename}")
 
     def extract_data(self):
@@ -53,9 +58,9 @@ class Attack:
     def resize(self):
         print("Applying resize...")
         resized = self.image
-        # resized = cv2.resize(
-        #     self.image, (self.image.shape[1] // 2, self.image.shape[0] // 2)
-        # )
+        resized = cv2.resize(
+            self.image, (self.image.shape[1] // 2, self.image.shape[0] // 2)
+        )
         self.save_image(resized, "resized")
 
     # JPEG Compression
