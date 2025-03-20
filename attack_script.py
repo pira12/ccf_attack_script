@@ -66,12 +66,18 @@ class Attack:
     # JPEG Compression
     def compress(self, n=4):
         print("Applying compress...")
-        qualities = np.linspace(0, 100, n, dtype=int)
+        if self.extension == ".png":
+            qualities = np.linspace(0, 9, n, dtype=int)
+        else:
+            qualities = np.linspace(0, 100, n, dtype=int)
+
         for quality in qualities:
             filename = os.path.join(
-                self.output_folder, f"compressed_{quality}_{self.image_name}{self.extension}"
+                self.output_folder, f"compressed_{quality}_{self.image_name}{'_tmp' if self.extension == '.png' else ''}.jpg"
             )
             cv2.imwrite(filename, self.image, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+            if self.extension == ".png":
+                os.system(f"cp {filename} {filename.replace('_tmp', '').replace('.jpg', '.png')}; rm {filename}")
             print(f"compress applied and saved: {filename} with quality {quality}")
 
     # Gaussian Blur
@@ -138,7 +144,7 @@ class Attack:
     def screenshot(self):
         print("Applying screenshot...")
         resized = cv2.resize(self.image, (800, 600))
-        self.save_image(resized, "screenshot")
+        self.save_image(resized, "resize_aspect_ratio")
 
     # Histogram Equalization
     def histogram_equalization(self):
@@ -156,7 +162,7 @@ def generate_stego_image(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        # tools = [Jsteg()]
+        tools = [Openstego()]
 
     for tool in tools:
         completed = []
@@ -225,6 +231,22 @@ def perform_attacks():
 import os
 import csv
 
+
+def levenstein_distance(s1, s2):
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
+
+    distances = range(len(s1) + 1)
+    for i2, c2 in enumerate(s2):
+        distances_ = [i2 + 1]
+        for i1, c1 in enumerate(s1):
+            if c1 == c2:
+                distances_.append(distances[i1])
+            else:
+                distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+        distances = distances_
+    return distances[-1]
+
 def extract_data(
     secret_data_path="./files/watermarks/hash.txt",
     output_folder="./files",
@@ -233,7 +255,7 @@ def extract_data(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        # tools = [Jsteg()]
+        tools = [Openstego()]
 
     # Read the secret data from the hash file as bytes
     with open(secret_data_path, 'rb') as hash_file:
@@ -262,8 +284,9 @@ def extract_data(
 
                     success = int(extracted_data == secret_data)
                     correct_characters = sum(c1 == c2 for c1, c2 in zip(extracted_data, secret_data))
+                    levenstein_dst = levenstein_distance(extracted_data, secret_data)
 
-                    csv_writer.writerow([tool.name, stego_image, success, correct_characters])
+                    csv_writer.writerow([tool.name, stego_image, success, correct_characters, levenstein_dst])
                     print(f"Extracted data from {stego_image} with tool {tool.name}: Success = {success}, Correct Characters = {correct_characters}")
                 except Exception as e:
                     csv_writer.writerow([tool.name, stego_image, 0, 0])
