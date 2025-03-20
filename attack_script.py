@@ -1,8 +1,8 @@
 import cv2
+import csv
 import numpy as np
 import os
 import argparse
-import subprocess
 from PIL import Image, ImageEnhance
 from stegano import lsb
 
@@ -10,7 +10,6 @@ from tools.jsteg import Jsteg
 from tools.openstego import Openstego
 from tools.stegify import Stegify
 from tools.stegosuite import Stegosuite
-from tools.rivagan import Rivagan
 from tools.steghide import Steghide
 from tools.steganotool import Steganotool
 from tools.outguess import Outguess
@@ -151,7 +150,8 @@ def generate_stego_image(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
+        # tools = [Jsteg()]
 
     for tool in tools:
         completed = []
@@ -217,6 +217,8 @@ def perform_attacks():
                 except ValueError as e:
                     print(f"Verification failed for {stego_image}: {e}")
 
+import os
+import csv
 
 def extract_data(
     secret_data_path="./files/watermarks/hash.txt",
@@ -225,59 +227,42 @@ def extract_data(
     tools=None,
 ):
     if tools is None:
-        tools = [Openstego(), Stegify(), Stegosuite(), Rivagan(), Jsteg(), Steganotool(), Steghide(), Outguess()]
+        tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
+        # tools = [Jsteg()]
 
-    # Read the secret data from the hash file
-    with open(secret_data_path, 'r') as hash_file:
+    # Read the secret data from the hash file as bytes
+    with open(secret_data_path, 'rb') as hash_file:
         secret_data = hash_file.read().strip()
 
-    summary_file_path = os.path.join(output_folder, "extraction_summary.txt")
+    summary_file_path = os.path.join(output_folder, "extraction_summary.csv")
 
-    with open(summary_file_path, 'w') as summary_file:
+    with open(summary_file_path, 'w', newline='') as summary_file:
+        csv_writer = csv.writer(summary_file)
+        csv_writer.writerow(["Tool", "Image", "Success", "Correct Characters"])
+
         for tool in tools:
-            completed = []
-            failed = []
             stego_folder_path = os.path.join(output_folder, tool.name)
-
-            summary_file.write(f"Extraction Summary for {tool.name}\n")
-            summary_file.write("=" * 40 + "\n")
 
             for stego_image in os.listdir(os.path.join(stego_folder_path, "attacks")):
                 stego_image_path = os.path.join(stego_folder_path, "attacks", stego_image)
-                # remove file extension
+                # Remove file extension
                 name = os.path.splitext(stego_image)[0]
                 output_file = os.path.join(stego_folder_path, "extracted", name + ".txt")
 
                 try:
                     data = tool.extract_data(stego_image_path, output_file)
-                    # Read the extracted data from the output file
-                    with open(output_file, 'r') as extracted_file:
+                    # Read the extracted data from the output file as bytes
+                    with open(output_file, 'rb') as extracted_file:
                         extracted_data = extracted_file.read().strip()
 
-                    if extracted_data == secret_data:
-                        completed.append(stego_image)
-                        summary_file.write(f"Successfully extracted data from {stego_image}\n")
-                        print(f"Extracted data from {stego_image}")
-                    else:
-                        failed.append(stego_image)
-                        summary_file.write(f"Extracted data from {stego_image} does not match the secret data\n")
-                        print(f"Extracted data from {stego_image} does not match the secret data")
+                    success = int(extracted_data == secret_data)
+                    correct_characters = sum(c1 == c2 for c1, c2 in zip(extracted_data, secret_data))
+
+                    csv_writer.writerow([tool.name, stego_image, success, correct_characters])
+                    print(f"Extracted data from {stego_image} with tool {tool.name}: Success = {success}, Correct Characters = {correct_characters}")
                 except Exception as e:
-                    failed.append(stego_image)
-                    summary_file.write(f"Failed to extract data from {stego_image}: {e}\n")
-                    print(f"Failed to extract data from {stego_image}: {e}")
-
-            summary_file.write("\nSummary:\n")
-            summary_file.write(f"Successfully extracted from {len(completed)} images:\n")
-            for img in completed:
-                summary_file.write(f"  - {img}\n")
-
-            summary_file.write(f"\nFailed to extract from {len(failed)} images:\n")
-            for img in failed:
-                summary_file.write(f"  - {img}\n")
-
-            summary_file.write("\n" + "=" * 40 + "\n")
-
+                    csv_writer.writerow([tool.name, stego_image, 0, 0])
+                    print(f"Failed to extract data from {stego_image} with tool {tool.name}: {e}")
 
 # Main Function
 def main(image_path=None, output_folder=None, secret_data_path=None, tools=None):
@@ -307,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tool",
         default="None",
-        choices=["steghide", "stegano", "openstego", "stegify", "stegosuite", "rivagan"],
+        choices=["steghide", "stegano", "openstego", "stegify", "stegosuite", "jsteg", "outguess"],
         help="Steganography tool to use",
     )
     parser.add_argument(

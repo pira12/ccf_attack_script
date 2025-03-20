@@ -1,2 +1,0 @@
-include imwatermark/rivagan_decoder.onnx
-include imwatermark/rivagan_encoder.onnx
