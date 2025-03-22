@@ -162,7 +162,7 @@ def generate_stego_image(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        tools = [Openstego()]
+        # tools = [Openstego()]
 
     for tool in tools:
         completed = []
@@ -255,7 +255,7 @@ def extract_data(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        tools = [Openstego()]
+        # tools = [Openstego()]
 
     # Read the secret data from the hash file as bytes
     with open(secret_data_path, 'rb') as hash_file:
