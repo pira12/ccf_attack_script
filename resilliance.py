@@ -19,17 +19,19 @@ def plot_data():
 
     data[0].append("levenshtein_distance")
     for d in data:
-        if len(d) != 5:
+        if d[0] == "stegosuite" and len(d) == 4:
             d.append(0)
+        assert(len(d) == 5)
 
     data = np.array(data)
 
     # remove file name from data
     attack_names = data[1:, 1]
-    data = data[2:, 2]
+    data = data[1:, 2]
+    assert(len(attack_names) == len(data))
 
 
-    attack_names = [attack.replace(name, "") for attack in attack_names for name in strip_names if name in attack]
+    attack_names = [attack.replace(name, ("_" + name[-3:]) if "compressed" in attack else "") for attack in attack_names for name in strip_names if name in attack]
     data = [int(d) for d in data]
 
 
@@ -53,9 +55,9 @@ def plot_data():
     plt.bar(x, y)
     plt.xticks(rotation=45, ha='right')
 
-    plt.title('Resilience of Attacks.')
+    plt.title('Successfulness of Attacks')
     plt.xlabel('Attack Names')
-    plt.ylabel('Resilience')
+    plt.ylabel('Number of unsuccessful attacks')
 
     plt.show()
 
