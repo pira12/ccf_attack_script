@@ -29,7 +29,7 @@ python script.py --image path/to/input/image.png --output path/to/output/folder
 The script applies the following transformations:
 1. Embedding Additional Data (Placeholder)
 2. Image Resizing
-3. JPEG Compression
+3. JPEG Compression (Multi-step)
 4. Gaussian Blur
 5. Noise Addition
 6. Brightness Adjustment
