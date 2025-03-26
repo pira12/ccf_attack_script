@@ -64,12 +64,10 @@ class Attack:
         self.save_image(resized, "resized")
 
     # JPEG Compression
-    def compress(self, n=4):
+    def compress(self, n=5):
         print("Applying compress...")
-        if self.extension == ".png":
-            qualities = np.linspace(0, 9, n, dtype=int)
-        else:
-            qualities = np.linspace(0, 100, n, dtype=int)
+
+        qualities = np.linspace(0, 100, n, dtype=int)
 
         for quality in qualities:
             filename = os.path.join(
@@ -162,7 +160,7 @@ def generate_stego_image(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        # tools = [Openstego()]
+        tools = [Openstego()]
 
     for tool in tools:
         completed = []
@@ -255,7 +253,7 @@ def extract_data(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        # tools = [Openstego()]
+        tools = [Openstego()]
 
     # Read the secret data from the hash file as bytes
     with open(secret_data_path, 'rb') as hash_file:
