@@ -160,7 +160,6 @@ def generate_stego_image(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        tools = [Openstego()]
 
     for tool in tools:
         completed = []
@@ -226,10 +225,6 @@ def perform_attacks():
                 except ValueError as e:
                     print(f"Verification failed for {stego_image}: {e}")
 
-import os
-import csv
-
-
 def levenstein_distance(s1, s2):
     if len(s1) > len(s2):
         s1, s2 = s2, s1
@@ -253,7 +248,6 @@ def extract_data(
 ):
     if tools is None:
         tools = [Openstego(), Stegify(), Stegosuite(), Jsteg(), Steganotool(), Steghide(), Outguess()]
-        tools = [Openstego()]
 
     # Read the secret data from the hash file as bytes
     with open(secret_data_path, 'rb') as hash_file:
